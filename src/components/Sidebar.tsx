@@ -3,7 +3,6 @@ import { Search, Menu, X, Plus, BookOpen, History, Trash2, Bookmark, Share2 } fr
 import { motion, AnimatePresence } from 'motion/react';
 import { ChatSession } from '../hooks/useChatHistory';
 import { SavedItem } from '../hooks/useSavedItems';
-import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -30,7 +29,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectSavedItem,
   onRemoveSavedItem
 }) => {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = React.useState<'history' | 'saved'>('history');
 
   return (
@@ -162,17 +160,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <div className="p-4 border-t border-ohara-border bg-ohara-bg/80 backdrop-blur-sm">
-          {user && (
-            <div className="flex items-center gap-3 p-3 mb-4 bg-zinc-900/50 rounded-2xl border border-ohara-border">
-              <div className="w-10 h-10 bg-ohara-red-dark rounded-xl flex items-center justify-center border border-ohara-red-vivid text-white font-bold">
-                {user.displayName?.[0] || user.email?.[0]?.toUpperCase() || 'U'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-white truncate">{user.displayName || 'Ricercatore'}</p>
-                <p className="text-[10px] text-zinc-500 truncate">{user.email}</p>
-              </div>
-            </div>
-          )}
           <p className="text-[10px] text-zinc-600 text-center">
             OHARA Intelligence v1.1<br/>
             Powered by Gemini 3.1 Pro

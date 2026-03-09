@@ -47,13 +47,6 @@ export function useChatHistory() {
   const saveSessions = (newSessions: ChatSession[]) => {
     const limited = newSessions.slice(0, MAX_SESSIONS);
     setSessions(limited);
-    
-    // Check autoSave setting from localStorage directly to avoid hook dependency issues
-    const autoSaveRaw = localStorage.getItem('ohara_autosave');
-    const autoSave = autoSaveRaw !== null ? JSON.parse(autoSaveRaw) : true;
-    
-    if (!autoSave) return;
-
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(limited));
     } catch (e) {

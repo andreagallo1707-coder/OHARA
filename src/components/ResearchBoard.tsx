@@ -260,12 +260,10 @@ export const ResearchBoard: React.FC<ResearchBoardProps> = ({ onChatWithAI }) =>
     
     try {
       const model = "gemini-3-flash-preview";
-      const prompt = `Cerca articoli scientifici, news e paper REALI e RECENTI riguardanti: "${query}". 
+      const prompt = `Cerca articoli scientifici, news e paper riguardanti: "${query}". 
       Includi risultati da Nature, Science, arXiv, NASA e altre fonti accademiche.
-      REQUISITI:
-      - Traduci titoli e riassunti in ITALIANO.
-      - Fornisci URL REALI e DIRETTI (non inventati).
-      - Restituisci un array JSON di oggetti con: id, title, summary, source, link, published.`;
+      Traduci titoli e riassunti in italiano.
+      Restituisci un array JSON di oggetti con: id, title, summary, source, link, published.`;
 
       const genAIResponse = await genAI.models.generateContent({
         model,
