@@ -25,7 +25,7 @@ export interface ChatSession {
 const STORAGE_KEY = 'ohara_chat_history';
 const MAX_SESSIONS = 10;
 
-export function useChatHistory() {
+export function useChatHistory(autoSave: boolean = true) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
@@ -35,8 +35,6 @@ export function useChatHistory() {
       try {
         const parsed = JSON.parse(saved);
         setSessions(parsed);
-        // Don't auto-select the last session on app restart
-        // This ensures the app starts with a fresh "New Chat" view
         setCurrentSessionId(null);
       } catch (e) {
         console.error("Failed to load history", e);
@@ -47,19 +45,14 @@ export function useChatHistory() {
   const saveSessions = (newSessions: ChatSession[]) => {
     const limited = newSessions.slice(0, MAX_SESSIONS);
     setSessions(limited);
-    
-    // Check autoSave setting from localStorage directly to avoid hook dependency issues
-    const autoSaveRaw = localStorage.getItem('ohara_autosave');
-    const autoSave = autoSaveRaw !== null ? JSON.parse(autoSaveRaw) : true;
-    
-    if (!autoSave) return;
-
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(limited));
-    } catch (e) {
-      console.warn("Storage full, removing oldest session");
-      if (limited.length > 1) {
-        saveSessions(limited.slice(0, -1));
+    if (autoSave) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(limited));
+      } catch (e) {
+        console.warn("Storage full, removing oldest session");
+        if (limited.length > 1) {
+          saveSessions(limited.slice(0, -1));
+        }
       }
     }
   };
@@ -97,7 +90,9 @@ export function useChatHistory() {
         return s;
       });
       const sorted = [...updated].sort((a, b) => b.lastUpdated - a.lastUpdated);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sorted.slice(0, MAX_SESSIONS)));
+      if (autoSave) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sorted.slice(0, MAX_SESSIONS)));
+      }
       return sorted.slice(0, MAX_SESSIONS);
     });
     
@@ -114,7 +109,9 @@ export function useChatHistory() {
         }
         return s;
       });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      if (autoSave) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      }
       return updated;
     });
   };

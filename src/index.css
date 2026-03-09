@@ -2,14 +2,19 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "katex/dist/katex.min.css";
 
+:root {
+  --accent-dark: #8b0000;
+  --accent-vivid: #dc143c;
+}
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
   --color-ohara-bg: #0a0a0a;
   --color-ohara-card: #141414;
-  --color-ohara-red-dark: #8b0000;
-  --color-ohara-red-vivid: #dc143c;
+  --color-ohara-red-dark: var(--accent-dark);
+  --color-ohara-red-vivid: var(--accent-vivid);
   --color-ohara-border: #262626;
 }
 
