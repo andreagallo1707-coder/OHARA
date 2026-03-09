@@ -1,0 +1,71 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import "katex/dist/katex.min.css";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-ohara-bg: #0a0a0a;
+  --color-ohara-card: #141414;
+  --color-ohara-red-dark: #8b0000;
+  --color-ohara-red-vivid: #dc143c;
+  --color-ohara-border: #262626;
+}
+
+@layer base {
+  body {
+    @apply bg-ohara-bg text-zinc-100 font-sans antialiased;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-ohara-border rounded-full hover:bg-zinc-700 transition-colors;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+.markdown-body {
+  @apply text-zinc-300 leading-relaxed break-words;
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+  @apply text-white font-semibold mt-6 mb-4;
+}
+
+.markdown-body p {
+  @apply mb-4;
+}
+
+.markdown-body code {
+  @apply bg-zinc-800 px-1.5 py-0.5 rounded text-sm font-mono text-ohara-red-vivid;
+}
+
+.markdown-body pre {
+  @apply bg-zinc-900 p-4 rounded-lg overflow-x-auto border border-ohara-border my-4;
+}
+
+.markdown-body ul, .markdown-body ol {
+  @apply ml-6 mb-4 list-disc;
+}
+
+.markdown-body a {
+  @apply text-ohara-red-vivid font-bold hover:underline decoration-2 underline-offset-2;
+}
+
+.katex-display {
+  @apply my-4 overflow-x-auto overflow-y-hidden py-2;
+}
