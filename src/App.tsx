@@ -10,26 +10,16 @@ import { useSavedItems } from './hooks/useSavedItems';
 import { useChat } from './hooks/useChat';
 import { extractGlossaryTerms, FileData } from './services/gemini';
 import { TooltipProvider } from '@radix-ui/react-tooltip';
-import { LayoutGrid, MessageSquare, Sparkles, Bookmark, Settings, User as UserIcon, Palette, Shield, Bell, Search, RefreshCw, X, ExternalLink, BookOpen, Paperclip, Newspaper } from 'lucide-react';
+import { LayoutGrid, MessageSquare, Sparkles, Bookmark, Settings, User as UserIcon, Palette, Shield, Bell, Search, RefreshCw, X, ExternalLink, BookOpen, Paperclip, Newspaper, LogOut, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-
-const THEMES = {
-  Crimson: { dark: '#8b0000', vivid: '#dc143c' },
-  Emerald: { dark: '#064e3b', vivid: '#10b981' },
-  Indigo: { dark: '#312e81', vivid: '#6366f1' },
-  Amber: { dark: '#78350f', vivid: '#f59e0b' },
-};
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { SettingsProvider, useSettings } from './contexts/SettingsContext';
+import { AuthView } from './components/AuthView';
 
 function MainApp() {
-  const [autoSave, setAutoSave] = useState(() => {
-    const saved = localStorage.getItem('ohara_autosave');
-    return saved !== null ? JSON.parse(saved) : true;
-  });
-
-  const [themeColor, setThemeColor] = useState(() => {
-    return localStorage.getItem('ohara_theme') || 'Crimson';
-  });
-
+  const { user, logout, loading } = useAuth();
+  const { theme, setTheme, autoSave, setAutoSave } = useSettings();
+  
   const {
     sessions,
     currentSession,
@@ -39,18 +29,7 @@ function MainApp() {
     addMessage,
     updateLastMessage,
     deleteSession,
-  } = useChatHistory(autoSave);
-
-  useEffect(() => {
-    localStorage.setItem('ohara_autosave', JSON.stringify(autoSave));
-  }, [autoSave]);
-
-  useEffect(() => {
-    localStorage.setItem('ohara_theme', themeColor);
-    const theme = THEMES[themeColor as keyof typeof THEMES] || THEMES.Crimson;
-    document.documentElement.style.setProperty('--accent-dark', theme.dark);
-    document.documentElement.style.setProperty('--accent-vivid', theme.vivid);
-  }, [themeColor]);
+  } = useChatHistory();
 
   const { glossary, addTerms } = useGlossary();
   const { savedItems, saveItem, removeItem, isSaved } = useSavedItems();
@@ -139,6 +118,18 @@ function MainApp() {
     addMessage(sessionId, { role: 'model', content: item.content, citations: item.citations });
   };
 
+  if (loading) {
+    return (
+      <div className="h-screen bg-ohara-bg flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-ohara-red-dark border-t-ohara-red-vivid rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthView />;
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-ohara-bg flex-col lg:flex-row">
       <Sidebar
@@ -219,11 +210,22 @@ function MainApp() {
                     </h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-2xl border border-ohara-border">
-                        <div>
-                          <div className="text-sm font-bold text-white">Status Account</div>
-                          <div className="text-xs text-zinc-500">Ricercatore Ospite</div>
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-ohara-red-dark rounded-xl flex items-center justify-center border border-ohara-red-vivid text-white font-bold text-xl">
+                            {user.displayName?.[0] || user.email?.[0]?.toUpperCase() || 'U'}
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-white">{user.displayName || 'Ricercatore'}</div>
+                            <div className="text-xs text-zinc-500">{user.email}</div>
+                          </div>
                         </div>
-                        <button className="px-4 py-2 bg-ohara-red-dark text-white text-xs font-bold rounded-lg hover:bg-ohara-red-vivid transition-colors">LOGIN</button>
+                        <button 
+                          onClick={() => logout()}
+                          className="p-3 bg-zinc-900 border border-ohara-border text-zinc-400 hover:text-ohara-red-vivid rounded-xl transition-colors"
+                          title="Logout"
+                        >
+                          <LogOut size={18} />
+                        </button>
                       </div>
                     </div>
                   </section>
@@ -234,19 +236,20 @@ function MainApp() {
                       Layout & Colore
                     </h3>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                      {Object.keys(THEMES).map(color => (
+                      {(['Crimson', 'Emerald', 'Indigo', 'Amber'] as const).map(color => (
                         <button 
                           key={color} 
-                          onClick={() => setThemeColor(color)}
-                          className={`flex flex-col items-center gap-2 p-4 bg-zinc-900/50 rounded-2xl border transition-all group ${themeColor === color ? 'border-ohara-red-vivid' : 'border-ohara-border hover:border-ohara-red-vivid/50'}`}
+                          onClick={() => setTheme(color)}
+                          className={`flex flex-col items-center gap-2 p-4 bg-zinc-900/50 rounded-2xl border transition-all group ${theme === color ? 'border-ohara-red-vivid bg-ohara-red-dark/5' : 'border-ohara-border hover:border-zinc-700'}`}
                         >
-                          <div 
-                            className="w-8 h-8 rounded-full" 
-                            style={{ backgroundColor: THEMES[color as keyof typeof THEMES].vivid }}
-                          />
-                          <span className={`text-[10px] font-bold uppercase tracking-widest ${themeColor === color ? 'text-white' : 'text-zinc-500 group-hover:text-white'}`}>
-                            {color}
-                          </span>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            color === 'Crimson' ? 'bg-[#dc143c]' : 
+                            color === 'Emerald' ? 'bg-[#10b981]' : 
+                            color === 'Indigo' ? 'bg-[#6366f1]' : 'bg-[#f59e0b]'
+                          }`}>
+                            {theme === color && <Check size={14} className="text-white" />}
+                          </div>
+                          <span className={`text-[10px] font-bold uppercase tracking-widest ${theme === color ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'}`}>{color}</span>
                         </button>
                       ))}
                     </div>
@@ -259,16 +262,15 @@ function MainApp() {
                     </h3>
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-zinc-300">Salva cronologia locale</span>
+                        <div className="space-y-1">
+                          <span className="text-sm text-zinc-300 block">Salva cronologia locale</span>
+                          <span className="text-[10px] text-zinc-500 uppercase tracking-widest block">Persisti i dati tra le sessioni</span>
+                        </div>
                         <button 
                           onClick={() => setAutoSave(!autoSave)}
-                          className={`w-10 h-5 rounded-full relative transition-colors ${autoSave ? 'bg-ohara-red-vivid' : 'bg-zinc-700'}`}
+                          className={`w-12 h-6 rounded-full relative transition-colors duration-300 ${autoSave ? 'bg-ohara-red-vivid' : 'bg-zinc-800'}`}
                         >
-                          <motion.div 
-                            animate={{ x: autoSave ? 20 : 4 }}
-                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                            className="absolute top-1 w-3 h-3 bg-white rounded-full" 
-                          />
+                          <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${autoSave ? 'right-1' : 'left-1'}`} />
                         </button>
                       </div>
                       <div className="pt-4 border-t border-ohara-border">
@@ -324,14 +326,18 @@ function MainApp() {
 
 export default function App() {
   return (
-    <TooltipProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<MainApp />} />
-          <Route path="/share" element={<ShareView />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <SettingsProvider>
+        <TooltipProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<MainApp />} />
+              <Route path="/share" element={<ShareView />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </SettingsProvider>
+    </AuthProvider>
   );
 }

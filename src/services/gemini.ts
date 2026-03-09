@@ -121,13 +121,6 @@ Structure: # [Title]\n[Explanation]\n## SOURCES\n- [Title](URL)`;
   }
 }
 
-function cleanJsonString(text: string): string {
-  return text.trim()
-    .replace(/^```json\n?/, '')
-    .replace(/\n?```$/, '')
-    .trim();
-}
-
 export async function extractGlossaryTerms(text: string): Promise<{ term: string; definition: string }[]> {
   if (!API_KEY) return [];
   const ai = new GoogleGenAI({ apiKey: API_KEY });
@@ -139,10 +132,8 @@ export async function extractGlossaryTerms(text: string): Promise<{ term: string
         responseMimeType: "application/json",
       }
     });
-    const cleaned = cleanJsonString(response.text || "[]");
-    return JSON.parse(cleaned);
+    return JSON.parse(response.text || "[]");
   } catch (e) {
-    console.error("Error in extractGlossaryTerms:", e);
     return [];
   }
 }
@@ -181,8 +172,9 @@ export async function getDailyDiscoveries(): Promise<Discovery[]> {
       },
     });
     
-    const cleaned = cleanJsonString(response.text || "[]");
-    const results = JSON.parse(cleaned);
+    const text = response.text?.trim() || "[]";
+    const jsonStr = text.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+    const results = JSON.parse(jsonStr);
     return Array.isArray(results) ? results : [];
   } catch (error) {
     console.error("Error in getDailyDiscoveries:", error);
@@ -213,8 +205,9 @@ export async function searchDiscoveries(query: string): Promise<Discovery[]> {
       },
     });
     
-    const cleaned = cleanJsonString(response.text || "[]");
-    const results = JSON.parse(cleaned);
+    const text = response.text?.trim() || "[]";
+    const jsonStr = text.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+    const results = JSON.parse(jsonStr);
     return Array.isArray(results) ? results : [];
   } catch (error) {
     console.error("Error in searchDiscoveries:", error);

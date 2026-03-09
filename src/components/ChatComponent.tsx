@@ -154,10 +154,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     if (typeof text !== 'string') return text;
     const terms = Object.keys(glossary).sort((a, b) => b.length - a.length);
     if (terms.length === 0) return text;
-    
-    // Escape terms for regex
-    const escapedTerms = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    const regex = new RegExp(`\\b(${escapedTerms.join('|')})\\b`, 'gi');
+    const regex = new RegExp(`\\b(${terms.join('|')})\\b`, 'gi');
     const parts = text.split(regex);
     return parts.map((part, i) => {
       const lowerPart = part.toLowerCase();
@@ -475,10 +472,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(e);
-                }
+                // Allow Enter for new lines, only send via dedicated button
               }}
               placeholder={selectedFile ? "Aggiungi un commento..." : "Interroga OHARA... (es. 'Meccanica Quantistica')"}
               disabled={isLoading}

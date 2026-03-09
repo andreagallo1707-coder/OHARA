@@ -80,13 +80,6 @@ interface ResearchBoardProps {
   onChatWithAI?: (message: string) => void;
 }
 
-const cleanJsonString = (text: string): string => {
-  return text.trim()
-    .replace(/^```json\n?/, '')
-    .replace(/\n?```$/, '')
-    .trim();
-};
-
 export const ResearchBoard: React.FC<ResearchBoardProps> = ({ onChatWithAI }) => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -171,8 +164,7 @@ export const ResearchBoard: React.FC<ResearchBoardProps> = ({ onChatWithAI }) =>
               contents: prompt,
               config: { responseMimeType: "application/json" }
             });
-            const cleaned = cleanJsonString(genAIResponse.text || "[]");
-            const results = JSON.parse(cleaned);
+            const results = JSON.parse(genAIResponse.text);
             const items = Array.isArray(results) ? results : (results.articles || results.results || []);
             return items
               .filter((a: any) => a.title && a.summary && a.link)
@@ -284,8 +276,7 @@ export const ResearchBoard: React.FC<ResearchBoardProps> = ({ onChatWithAI }) =>
         }
       });
 
-      const cleaned = cleanJsonString(genAIResponse.text || "[]");
-      const results = JSON.parse(cleaned);
+      const results = JSON.parse(genAIResponse.text);
       const searchResults = (Array.isArray(results) ? results : (results.articles || results.results || []))
         .filter((a: any) => a.title && a.summary && a.link && a.link !== '#')
         .map((a: any, i: number) => ({
