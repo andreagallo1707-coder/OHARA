@@ -1,6 +1,6 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 
-const API_KEY = process.env.GEMINI_API_KEY;
+const API_KEY = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
 
 export interface Citation {
   title: string;
@@ -25,7 +25,7 @@ export async function* askOharaStream(
   fileData?: FileData
 ) {
   if (!API_KEY) {
-    throw new Error("Gemini API key is missing.");
+    throw new Error("Chiave API Gemini mancante. Se sei su Netlify, assicurati di aver impostato GEMINI_API_KEY nelle variabili d'ambiente.");
   }
 
   const ai = new GoogleGenAI({ apiKey: API_KEY });
@@ -84,16 +84,33 @@ Structure: # [Title]\n[Explanation]\n## SOURCES\n- [Title](URL)`;
   }
 
   try {
-    const responseStream = await ai.models.generateContentStream({
-      model: "gemini-3-flash-preview",
-      contents: [...cleanHistory, { role: 'user', parts: finalUserParts }],
-      config: { 
-        systemInstruction, 
-        tools: tools.length > 0 ? tools : undefined,
-        temperature: 0.2,
-        maxOutputTokens: 2048,
-      },
-    });
+    const modelName = "gemini-3-flash-preview";
+    let responseStream;
+    
+    try {
+      responseStream = await ai.models.generateContentStream({
+        model: modelName,
+        contents: [...cleanHistory, { role: 'user', parts: finalUserParts }],
+        config: { 
+          systemInstruction, 
+          tools: tools.length > 0 ? tools : undefined,
+          temperature: 0.2,
+          maxOutputTokens: 2048,
+        },
+      });
+    } catch (toolError: any) {
+      console.warn("Retrying without tools due to error:", toolError);
+      // Fallback: try without tools if the error might be tool-related
+      responseStream = await ai.models.generateContentStream({
+        model: modelName,
+        contents: [...cleanHistory, { role: 'user', parts: finalUserParts }],
+        config: { 
+          systemInstruction, 
+          temperature: 0.2,
+          maxOutputTokens: 2048,
+        },
+      });
+    }
 
     let fullText = "";
     let citations: Citation[] = [];
@@ -115,8 +132,14 @@ Structure: # [Title]\n[Explanation]\n## SOURCES\n- [Title](URL)`;
       yield { text: fullText, citations, done: false };
     }
     yield { text: fullText, citations, done: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini API Error:", error);
+    if (error.message?.includes("API key not valid")) {
+      throw new Error("La chiave API Gemini non è valida. Controlla di averla copiata correttamente su Netlify.");
+    }
+    if (error.message?.includes("quota")) {
+      throw new Error("Hai esaurito la quota gratuita di Gemini. Riprova tra un minuto.");
+    }
     throw error;
   }
 }

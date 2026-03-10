@@ -2,14 +2,34 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "katex/dist/katex.min.css";
 
+:root {
+  --ohara-primary: #dc143c;
+  --ohara-primary-dark: #8b0000;
+}
+
+[data-theme='Emerald'] {
+  --ohara-primary: #10b981;
+  --ohara-primary-dark: #064e3b;
+}
+
+[data-theme='Indigo'] {
+  --ohara-primary: #6366f1;
+  --ohara-primary-dark: #312e81;
+}
+
+[data-theme='Amber'] {
+  --ohara-primary: #f59e0b;
+  --ohara-primary-dark: #78350f;
+}
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
   --color-ohara-bg: #0a0a0a;
   --color-ohara-card: #141414;
-  --color-ohara-red-dark: #8b0000;
-  --color-ohara-red-vivid: #dc143c;
+  --color-ohara-red-dark: var(--ohara-primary-dark);
+  --color-ohara-red-vivid: var(--ohara-primary);
   --color-ohara-border: #262626;
 }
 

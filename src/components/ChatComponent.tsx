@@ -150,33 +150,38 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const highlightTerms = (text: string) => {
+    if (typeof text !== 'string') return text;
+    const terms = Object.keys(glossary).sort((a, b) => b.length - a.length);
+    if (terms.length === 0) return text;
+    
+    // Escape terms for regex
+    const escapedTerms = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const regex = new RegExp(`\\b(${escapedTerms.join('|')})\\b`, 'gi');
+    const parts = text.split(regex);
+    return parts.map((part, i) => {
+      const lowerPart = part.toLowerCase();
+      if (glossary[lowerPart]) {
+        return (
+          <GlossaryTermHighlight 
+            key={i} 
+            term={glossary[lowerPart].term} 
+            definition={glossary[lowerPart].definition}
+          >
+            <span className="font-bold border-b border-ohara-red-vivid/30 cursor-help">{part}</span>
+          </GlossaryTermHighlight>
+        );
+      }
+      return part;
+    });
+  };
+
   const components = {
-    text: ({ node, ...props }: any) => {
-      const text = props.children as string;
-      if (typeof text !== 'string') return <span>{text}</span>;
-      const terms = Object.keys(glossary).sort((a, b) => b.length - a.length);
-      if (terms.length === 0) return <span>{text}</span>;
-      const regex = new RegExp(`\\b(${terms.join('|')})\\b`, 'gi');
-      const parts = text.split(regex);
-      return (
-        <span>
-          {parts.map((part, i) => {
-            const lowerPart = part.toLowerCase();
-            if (glossary[lowerPart]) {
-              return (
-                <GlossaryTermHighlight 
-                  key={i} 
-                  term={glossary[lowerPart].term} 
-                  definition={glossary[lowerPart].definition}
-                >
-                  <span className="font-bold border-b border-ohara-red-vivid/30 cursor-help">{part}</span>
-                </GlossaryTermHighlight>
-              );
-            }
-            return part;
-          })}
-        </span>
-      );
+    p: ({ children }: any) => {
+      return <p>{React.Children.map(children, child => typeof child === 'string' ? highlightTerms(child) : child)}</p>;
+    },
+    li: ({ children }: any) => {
+      return <li>{React.Children.map(children, child => typeof child === 'string' ? highlightTerms(child) : child)}</li>;
     }
   };
 
@@ -470,7 +475,10 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                // Allow Enter for new lines, only send via dedicated button
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
               }}
               placeholder={selectedFile ? "Aggiungi un commento..." : "Interroga OHARA... (es. 'Meccanica Quantistica')"}
               disabled={isLoading}

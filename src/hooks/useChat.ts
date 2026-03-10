@@ -65,7 +65,7 @@ export function useChat() {
         // Handled by timeout or manual cancel
       } else {
         console.error("Chat Error:", err);
-        setError("Impossibile rispondere. Riprova?");
+        setError(err.message || "Impossibile rispondere. Riprova?");
       }
     } finally {
       if (timeoutRef.current) {

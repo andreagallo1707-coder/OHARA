@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI } from "@google/genai";
 
 // Initialize Gemini for Discovery
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+const API_KEY = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+const genAI = new GoogleGenAI({ apiKey: API_KEY || '' });
 
 const hardcodedAPS = [
   {title: 'Quantum entanglement in macroscopic systems', summary: 'Researchers have demonstrated entanglement between due mechanical oscillators, pushing the boundaries of quantum mechanics.', link: 'https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.121.223604', source: 'APS'},
@@ -16,7 +17,12 @@ const hardcodedAPS = [
   {title: 'Quantum thermodynamics of small systems', summary: 'Experimental verification of fluctuation theorems in single-molecule junctions.', link: 'https://journals.aps.org/pre/abstract/10.1103/PhysRevE.99.042101', source: 'APS'},
   {title: 'High-energy neutrino astronomy', summary: 'IceCube observatory identifies a new source of extragalactic neutrinos associated with a blazar.', link: 'https://journals.aps.org/prd/abstract/10.1103/PhysRevD.99.063007', source: 'APS'},
   {title: 'Photonics in 2D materials', summary: 'Integration of transition metal dichalcogenides with silicon photonics for ultra-fast communication.', link: 'https://journals.aps.org/prapplied/abstract/10.1103/PhysRevApplied.11.044001', source: 'APS'},
-  {title: 'Muon g-2 experiment results', summary: 'New measurements of the muon magnetic moment continue to show tension with the Standard Model.', link: 'https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.126.141801', source: 'APS'}
+  {title: 'Muon g-2 experiment results', summary: 'New measurements of the muon magnetic moment continue to show tension with the Standard Model.', link: 'https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.126.141801', source: 'APS'},
+  {title: 'JWST reveals early galaxy formation', summary: 'The James Webb Space Telescope has identified galaxies that formed just 300 million years after the Big Bang.', link: 'https://www.nasa.gov/mission_pages/webb/main/index.html', source: 'NASA'},
+  {title: 'CRISPR gene editing for rare diseases', summary: 'New clinical trials show promising results for treating sickle cell anemia using CRISPR-Cas9 technology.', link: 'https://www.nature.com/articles/d41586-023-03303-z', source: 'Nature'},
+  {title: 'Fusion energy breakthrough at NIF', summary: 'Scientists achieve net energy gain in a fusion reaction for the second time, improving efficiency.', link: 'https://www.scientificamerican.com/article/nuclear-fusion-breakthrough-what-does-it-mean/', source: 'Scientific American'},
+  {title: 'AI models surpassing human benchmarks', summary: 'Large language models are now outperforming humans in complex reasoning and creative writing tasks.', link: 'https://technologyreview.com', source: 'MIT Tech Review'},
+  {title: 'Microplastics found in human blood', summary: 'A groundbreaking study detects microplastic particles in the human bloodstream for the first time.', link: 'https://www.theguardian.com/environment/2022/mar/24/microplastics-found-in-human-blood-for-first-time', source: 'The Guardian Science'}
 ];
 
 const parseArxiv = (xml: string) => {
@@ -95,6 +101,8 @@ export const ResearchBoard: React.FC<ResearchBoardProps> = ({ onChatWithAI }) =>
     setError(null);
     setViewMode('discovery');
     
+    const API_KEY = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+
     try {
       // Parallelize fetches for speed
       const fetchPromises = [
@@ -103,8 +111,7 @@ export const ResearchBoard: React.FC<ResearchBoardProps> = ({ onChatWithAI }) =>
           try {
             const cats = ['physics', 'astro-ph', 'cs.AI', 'q-bio', 'math', 'quant-ph', 'stat.ML'];
             const randomCat = cats[Math.floor(Math.random() * cats.length)];
-            // Increase max_results to 15 to ensure arXiv is well represented
-            const res = await fetch(`https://export.arxiv.org/api/query?search_query=cat:${randomCat}&max_results=15&sortBy=submittedDate&sortOrder=descending`);
+            const res = await fetch(`https://export.arxiv.org/api/query?search_query=cat:${randomCat}&max_results=20&sortBy=submittedDate&sortOrder=descending`);
             if (!res.ok) return [];
             const xml = await res.text();
             return parseArxiv(xml);
@@ -138,16 +145,20 @@ export const ResearchBoard: React.FC<ResearchBoardProps> = ({ onChatWithAI }) =>
           } catch (e) { return []; }
         })(),
 
-        // 4. APS Physics - Always include some from the curated list
+        // 4. APS Physics & Curated - Always include some from the curated list
         Promise.resolve(
           hardcodedAPS
             .sort(() => Math.random() - 0.5)
-            .slice(0, 4)
-            .map(a => ({ ...a, id: 'aps-' + Math.random().toString(36).substr(2, 9), published: new Date().toISOString() }))
+            .slice(0, 8)
+            .map(a => ({ ...a, id: 'curated-' + Math.random().toString(36).substr(2, 9), published: new Date().toISOString() }))
         ),
 
         // 5. Gemini Discovery - Targeted prompt for high quality
         (async () => {
+          if (!API_KEY) {
+            console.warn("Gemini API Key missing for Discovery");
+            return [];
+          }
           try {
             const model = "gemini-3-flash-preview";
             const today = new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -265,14 +276,26 @@ export const ResearchBoard: React.FC<ResearchBoardProps> = ({ onChatWithAI }) =>
       Traduci titoli e riassunti in italiano.
       Restituisci un array JSON di oggetti con: id, title, summary, source, link, published.`;
 
-      const genAIResponse = await genAI.models.generateContent({
-        model,
-        contents: prompt,
-        config: {
-          tools: [{ googleSearch: {} }],
-          responseMimeType: "application/json"
-        }
-      });
+      let genAIResponse;
+      try {
+        genAIResponse = await genAI.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            tools: [{ googleSearch: {} }],
+            responseMimeType: "application/json"
+          }
+        });
+      } catch (toolError: any) {
+        console.warn("Search failed with tools, retrying without:", toolError);
+        genAIResponse = await genAI.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json"
+          }
+        });
+      }
 
       const results = JSON.parse(genAIResponse.text);
       const searchResults = (Array.isArray(results) ? results : (results.articles || results.results || []))

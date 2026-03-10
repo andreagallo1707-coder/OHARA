@@ -14,6 +14,12 @@ import { LayoutGrid, MessageSquare, Sparkles, Bookmark, Settings, User as UserIc
 import { motion, AnimatePresence } from 'motion/react';
 
 function MainApp() {
+  const [themeColor, setThemeColor] = useState<string>(() => localStorage.getItem('ohara_theme_color') || 'Crimson');
+  const [autoSave, setAutoSave] = useState<boolean>(() => {
+    const saved = localStorage.getItem('ohara_auto_save');
+    return saved === null ? true : saved === 'true';
+  });
+
   const {
     sessions,
     currentSession,
@@ -23,7 +29,7 @@ function MainApp() {
     addMessage,
     updateLastMessage,
     deleteSession,
-  } = useChatHistory();
+  } = useChatHistory({ autoSave });
 
   const { glossary, addTerms } = useGlossary();
   const { savedItems, saveItem, removeItem, isSaved } = useSavedItems();
@@ -31,6 +37,15 @@ function MainApp() {
 
   const [view, setView] = useState<'chat' | 'news' | 'settings'>('chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', themeColor);
+    localStorage.setItem('ohara_theme_color', themeColor);
+  }, [themeColor]);
+
+  useEffect(() => {
+    localStorage.setItem('ohara_auto_save', String(autoSave));
+  }, [autoSave]);
 
   const handleSendMessage = async (content: string, fileData?: FileData, forceNewChat = false) => {
     setView('chat');
@@ -208,9 +223,18 @@ function MainApp() {
                     </h3>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       {['Crimson', 'Emerald', 'Indigo', 'Amber'].map(color => (
-                        <button key={color} className="flex flex-col items-center gap-2 p-4 bg-zinc-900/50 rounded-2xl border border-ohara-border hover:border-ohara-red-vivid transition-all group">
-                          <div className={`w-8 h-8 rounded-full ${color === 'Crimson' ? 'bg-ohara-red-vivid' : 'bg-zinc-700'}`} />
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-white">{color}</span>
+                        <button 
+                          key={color} 
+                          onClick={() => setThemeColor(color)}
+                          className={`flex flex-col items-center gap-2 p-4 bg-zinc-900/50 rounded-2xl border transition-all group ${themeColor === color ? 'border-ohara-red-vivid' : 'border-ohara-border hover:border-ohara-red-vivid/50'}`}
+                        >
+                          <div className={`w-8 h-8 rounded-full ${
+                            color === 'Crimson' ? 'bg-[#dc143c]' : 
+                            color === 'Emerald' ? 'bg-[#10b981]' : 
+                            color === 'Indigo' ? 'bg-[#6366f1]' : 
+                            'bg-[#f59e0b]'
+                          }`} />
+                          <span className={`text-[10px] font-bold uppercase tracking-widest ${themeColor === color ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'}`}>{color}</span>
                         </button>
                       ))}
                     </div>
@@ -224,9 +248,15 @@ function MainApp() {
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-zinc-300">Salva cronologia locale</span>
-                        <div className="w-10 h-5 bg-ohara-red-vivid rounded-full relative">
-                          <div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full" />
-                        </div>
+                        <button 
+                          onClick={() => setAutoSave(!autoSave)}
+                          className={`w-10 h-5 rounded-full relative transition-colors ${autoSave ? 'bg-ohara-red-vivid' : 'bg-zinc-800'}`}
+                        >
+                          <motion.div 
+                            animate={{ x: autoSave ? 22 : 4 }}
+                            className="absolute top-1 w-3 h-3 bg-white rounded-full" 
+                          />
+                        </button>
                       </div>
                       <div className="pt-4 border-t border-ohara-border">
                         <p className="text-[10px] text-zinc-500 mb-4 leading-relaxed uppercase tracking-widest">

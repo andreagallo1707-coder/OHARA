@@ -25,11 +25,12 @@ export interface ChatSession {
 const STORAGE_KEY = 'ohara_chat_history';
 const MAX_SESSIONS = 10;
 
-export function useChatHistory() {
+export function useChatHistory(config: { autoSave: boolean } = { autoSave: true }) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!config.autoSave) return;
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
@@ -42,11 +43,12 @@ export function useChatHistory() {
         console.error("Failed to load history", e);
       }
     }
-  }, []);
+  }, [config.autoSave]);
 
   const saveSessions = (newSessions: ChatSession[]) => {
     const limited = newSessions.slice(0, MAX_SESSIONS);
     setSessions(limited);
+    if (!config.autoSave) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(limited));
     } catch (e) {
@@ -90,7 +92,9 @@ export function useChatHistory() {
         return s;
       });
       const sorted = [...updated].sort((a, b) => b.lastUpdated - a.lastUpdated);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sorted.slice(0, MAX_SESSIONS)));
+      if (config.autoSave) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sorted.slice(0, MAX_SESSIONS)));
+      }
       return sorted.slice(0, MAX_SESSIONS);
     });
     
@@ -107,7 +111,9 @@ export function useChatHistory() {
         }
         return s;
       });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      if (config.autoSave) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      }
       return updated;
     });
   };
@@ -129,7 +135,9 @@ export function useChatHistory() {
         }
         return s;
       });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      if (config.autoSave) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      }
       return updated;
     });
   };
