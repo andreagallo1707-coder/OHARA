@@ -2,6 +2,7 @@ import React from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
+import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import { ExternalLink, Quote, ArrowLeft, Sparkles } from 'lucide-react';
 import LZString from 'lz-string';
@@ -57,7 +58,7 @@ export const ShareView: React.FC = () => {
           
           <div className="markdown-body relative z-10">
             <ReactMarkdown 
-              remarkPlugins={[remarkMath]} 
+              remarkPlugins={[remarkMath, remarkGfm]} 
               rehypePlugins={[rehypeKatex]}
             >
               {data.content}

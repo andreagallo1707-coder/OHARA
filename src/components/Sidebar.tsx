@@ -1,14 +1,13 @@
 import React from 'react';
-import { Search, Menu, X, Plus, BookOpen, History, Trash2, Bookmark, Share2 } from 'lucide-react';
+import { Search, Menu, X, Plus, BookOpen, History, Trash2, Bookmark, Share2, MoreVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChatSession } from '../hooks/useChatHistory';
+import { ChatSessionMeta } from '../hooks/useChatHistory';
 import { SavedItem } from '../hooks/useSavedItems';
-import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  sessions: ChatSession[];
+  sessions: ChatSessionMeta[];
   currentSessionId: string | null;
   onSelectSession: (id: string) => void;
   onNewChat: () => void;
@@ -18,7 +17,78 @@ interface SidebarProps {
   onRemoveSavedItem: (id: string) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
+const SessionItem = React.memo(({ 
+  session, 
+  currentSessionId, 
+  onSelectSession, 
+  onDeleteSession,
+  openMenuId,
+  setOpenMenuId
+}: { 
+  session: ChatSessionMeta, 
+  currentSessionId: string | null, 
+  onSelectSession: (id: string) => void, 
+  onDeleteSession: (id: string) => void,
+  openMenuId: string | null,
+  setOpenMenuId: (id: string | null) => void
+}) => (
+  <div
+    className={`group relative flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
+      currentSessionId === session.id 
+        ? 'bg-ohara-card border border-ohara-border text-white' 
+        : 'text-zinc-400 hover:bg-zinc-900/50'
+    }`}
+    onClick={() => onSelectSession(session.id)}
+  >
+    <div className={`w-1.5 h-1.5 rounded-full ${currentSessionId === session.id ? 'bg-ohara-red-vivid' : 'bg-transparent'}`} />
+    <span className="flex-1 truncate text-sm font-medium">{session.title}</span>
+    <div className="relative">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpenMenuId(openMenuId === session.id ? null : session.id);
+        }}
+        className="opacity-0 group-hover:opacity-100 p-1 hover:text-ohara-red-vivid transition-opacity"
+      >
+        <MoreVertical size={14} />
+      </button>
+      
+      <AnimatePresence>
+        {openMenuId === session.id && (
+          <>
+            <div 
+              className="fixed inset-0 z-10" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenMenuId(null);
+              }} 
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              className="absolute right-0 mt-1 w-40 bg-ohara-card border border-ohara-border rounded-xl shadow-2xl z-20 overflow-hidden"
+            >
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteSession(session.id);
+                  setOpenMenuId(null);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-ohara-red-vivid hover:bg-ohara-red-dark/10 transition-colors"
+              >
+                <Trash2 size={12} />
+                Elimina
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  </div>
+));
+
+export const Sidebar = React.memo(({
   isOpen,
   setIsOpen,
   sessions,
@@ -29,9 +99,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   savedItems,
   onSelectSavedItem,
   onRemoveSavedItem
-}) => {
-  const { user } = useAuth();
+}: SidebarProps) => {
   const [activeTab, setActiveTab] = React.useState<'history' | 'saved'>('history');
+  const [openMenuId, setOpenMenuId] = React.useState<string | null>(null);
 
   return (
     <>
@@ -50,42 +120,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       <motion.aside
         initial={false}
-        animate={{ x: isOpen ? 0 : -320 }}
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-80 bg-ohara-bg border-r border-ohara-border flex flex-col transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+        animate={{ 
+          x: isOpen ? 0 : (typeof window !== 'undefined' && window.innerWidth < 1024 ? -300 : 0),
+        }}
+        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+        className="fixed lg:static inset-y-0 left-0 z-40 w-72 bg-ohara-bg border-r border-ohara-border flex flex-col"
       >
-        <div className="p-6 border-b border-ohara-border">
+        <div className="p-4 border-b border-ohara-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-ohara-red-dark rounded-lg flex items-center justify-center border border-ohara-red-vivid">
-              <span className="text-white font-mono font-bold text-xl">Ω</span>
+            <div className="w-8 h-8 bg-ohara-red-dark rounded-lg flex items-center justify-center border border-ohara-red-vivid">
+              <span className="text-white font-mono font-bold text-lg">Ω</span>
             </div>
             <div>
-              <h1 className="text-2xl font-mono font-bold tracking-tighter text-ohara-red-vivid">OHARA</h1>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-medium">Scientific Intelligence</p>
+              <h1 className="text-xl font-mono font-bold tracking-tighter text-ohara-red-vivid leading-none">OHARA</h1>
+              <p className="text-[9px] uppercase tracking-[0.15em] text-zinc-500 font-medium">Scientific Intelligence</p>
             </div>
           </div>
         </div>
 
-        <div className="p-4">
+        <div className="p-3">
           <button
             onClick={onNewChat}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-ohara-red-dark/20 hover:bg-ohara-red-dark/40 border border-ohara-red-dark/50 rounded-xl text-ohara-red-vivid font-medium transition-all group"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-ohara-red-dark/20 hover:bg-ohara-red-dark/40 border border-ohara-red-dark/50 rounded-xl text-ohara-red-vivid font-medium transition-all group text-sm"
           >
-            <Plus size={18} className="group-hover:rotate-90 transition-transform" />
+            <Plus size={16} className="group-hover:rotate-90 transition-transform" />
             Nuova Ricerca
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex px-4 border-b border-ohara-border">
+        <div className="flex px-3 border-b border-ohara-border">
           <button 
-            onClick={() => setActiveTab('history')}
-            className={`flex-1 py-3 text-[10px] uppercase tracking-widest font-bold transition-colors border-b-2 ${activeTab === 'history' ? 'border-ohara-red-vivid text-white' : 'border-transparent text-zinc-500'}`}
+            onClick={() => { setActiveTab('history'); setOpenMenuId(null); }}
+            className={`flex-1 py-2.5 text-[9px] uppercase tracking-widest font-bold transition-colors border-b-2 ${activeTab === 'history' ? 'border-ohara-red-vivid text-white' : 'border-transparent text-zinc-500'}`}
           >
             History
           </button>
           <button 
-            onClick={() => setActiveTab('saved')}
-            className={`flex-1 py-3 text-[10px] uppercase tracking-widest font-bold transition-colors border-b-2 ${activeTab === 'saved' ? 'border-ohara-red-vivid text-white' : 'border-transparent text-zinc-500'}`}
+            onClick={() => { setActiveTab('saved'); setOpenMenuId(null); }}
+            className={`flex-1 py-2.5 text-[9px] uppercase tracking-widest font-bold transition-colors border-b-2 ${activeTab === 'saved' ? 'border-ohara-red-vivid text-white' : 'border-transparent text-zinc-500'}`}
           >
             Saved ({savedItems.length})
           </button>
@@ -100,27 +173,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <div className="space-y-1">
                 {sessions.map((session) => (
-                  <div
+                  <SessionItem
                     key={`session-${session.id}`}
-                    className={`group relative flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
-                      currentSessionId === session.id 
-                        ? 'bg-ohara-card border border-ohara-border text-white' 
-                        : 'text-zinc-400 hover:bg-zinc-900/50'
-                    }`}
-                    onClick={() => onSelectSession(session.id)}
-                  >
-                    <div className={`w-1.5 h-1.5 rounded-full ${currentSessionId === session.id ? 'bg-ohara-red-vivid' : 'bg-transparent'}`} />
-                    <span className="flex-1 truncate text-sm font-medium">{session.title}</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteSession(session.id);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:text-ohara-red-vivid transition-opacity"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+                    session={session}
+                    currentSessionId={currentSessionId}
+                    onSelectSession={onSelectSession}
+                    onDeleteSession={onDeleteSession}
+                    openMenuId={openMenuId}
+                    setOpenMenuId={setOpenMenuId}
+                  />
                 ))}
               </div>
             </div>
@@ -139,15 +200,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-bold text-zinc-200 truncate pr-6">{item.title}</span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveSavedItem(item.id);
-                        }}
-                        className="p-1 hover:text-ohara-red-vivid transition-colors"
-                      >
-                        <Trash2 size={12} />
-                      </button>
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(openMenuId === item.id ? null : item.id);
+                          }}
+                          className="p-1 hover:text-ohara-red-vivid transition-colors"
+                        >
+                          <MoreVertical size={12} />
+                        </button>
+
+                        <AnimatePresence>
+                          {openMenuId === item.id && (
+                            <>
+                              <div 
+                                className="fixed inset-0 z-10" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMenuId(null);
+                                }} 
+                              />
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                className="absolute right-0 mt-1 w-40 bg-ohara-card border border-ohara-border rounded-xl shadow-2xl z-20 overflow-hidden"
+                              >
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRemoveSavedItem(item.id);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-ohara-red-vivid hover:bg-ohara-red-dark/10 transition-colors"
+                                >
+                                  <Trash2 size={12} />
+                                  Rimuovi
+                                </button>
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
                     <span className="text-[10px] text-zinc-500">{new Date(item.timestamp).toLocaleDateString()}</span>
                   </div>
@@ -161,24 +256,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         </div>
 
-        <div className="p-4 border-t border-ohara-border bg-ohara-bg/80 backdrop-blur-sm">
-          {user && (
-            <div className="flex items-center gap-3 p-3 mb-4 bg-zinc-900/50 rounded-2xl border border-ohara-border">
-              <div className="w-10 h-10 bg-ohara-red-dark rounded-xl flex items-center justify-center border border-ohara-red-vivid text-white font-bold">
-                {user.displayName?.[0] || user.email?.[0]?.toUpperCase() || 'U'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-white truncate">{user.displayName || 'Ricercatore'}</p>
-                <p className="text-[10px] text-zinc-500 truncate">{user.email}</p>
-              </div>
-            </div>
-          )}
-          <p className="text-[10px] text-zinc-600 text-center">
+        <div className="p-3 border-t border-ohara-border bg-ohara-bg/80 backdrop-blur-sm">
+          <p className="text-[9px] text-zinc-600 text-center">
             OHARA Intelligence v1.1<br/>
-            Powered by Gemini 3.1 Pro
+            Powered by Gemini 3 Flash
           </p>
         </div>
       </motion.aside>
     </>
   );
-};
+});

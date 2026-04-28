@@ -32,14 +32,23 @@ export function useSavedItems() {
     };
     const updated = [newItem, ...savedItems];
     setSavedItems(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch (e) {
+      console.error("Failed to save item to localStorage", e);
+      // If it fails, we still have it in memory for the current session
+    }
     return newItem.id;
   };
 
   const removeItem = (id: string) => {
     const updated = savedItems.filter(i => i.id !== id);
     setSavedItems(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch (e) {
+      console.error("Failed to remove item from localStorage", e);
+    }
   };
 
   const isSaved = (title: string) => {

@@ -8,20 +8,20 @@ const API_KEY = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEM
 const genAI = new GoogleGenAI({ apiKey: API_KEY || '' });
 
 const hardcodedAPS = [
-  {title: 'Quantum entanglement in macroscopic systems', summary: 'Researchers have demonstrated entanglement between due mechanical oscillators, pushing the boundaries of quantum mechanics.', link: 'https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.121.223604', source: 'APS'},
-  {title: 'Black hole mergers and gravitational waves', summary: 'LIGO and Virgo collaborations report new detections of binary black hole mergers with unprecedented precision.', link: 'https://journals.aps.org/prd/abstract/10.1103/PhysRevD.100.064003', source: 'APS'},
-  {title: 'Superconductivity in twisted bilayer graphene', summary: 'A new study reveals the complex phase diagram of moiré materials, showing tunable superconducting states.', link: 'https://journals.aps.org/prb/abstract/10.1103/PhysRevB.98.220504', source: 'APS'},
-  {title: 'Topological insulators and quantum computing', summary: 'Discovery of new topological phases could lead to more stable qubits for future quantum computers.', link: 'https://journals.aps.org/prx/abstract/10.1103/PhysRevX.9.011010', source: 'APS'},
-  {title: 'Dark matter search with liquid xenon detectors', summary: 'The latest results from the LUX-ZEPLIN experiment set new limits on WIMP-nucleon cross sections.', link: 'https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.122.131301', source: 'APS'},
-  {title: 'Neural networks for fluid dynamics', summary: 'Machine learning models are now capable of simulating complex turbulent flows with high fidelity.', link: 'https://journals.aps.org/prfluids/abstract/10.1103/PhysRevFluids.4.100501', source: 'APS'},
-  {title: 'Quantum thermodynamics of small systems', summary: 'Experimental verification of fluctuation theorems in single-molecule junctions.', link: 'https://journals.aps.org/pre/abstract/10.1103/PhysRevE.99.042101', source: 'APS'},
-  {title: 'High-energy neutrino astronomy', summary: 'IceCube observatory identifies a new source of extragalactic neutrinos associated with a blazar.', link: 'https://journals.aps.org/prd/abstract/10.1103/PhysRevD.99.063007', source: 'APS'},
-  {title: 'Photonics in 2D materials', summary: 'Integration of transition metal dichalcogenides with silicon photonics for ultra-fast communication.', link: 'https://journals.aps.org/prapplied/abstract/10.1103/PhysRevApplied.11.044001', source: 'APS'},
-  {title: 'Muon g-2 experiment results', summary: 'New measurements of the muon magnetic moment continue to show tension with the Standard Model.', link: 'https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.126.141801', source: 'APS'},
-  {title: 'JWST reveals early galaxy formation', summary: 'The James Webb Space Telescope has identified galaxies that formed just 300 million years after the Big Bang.', link: 'https://www.nasa.gov/mission_pages/webb/main/index.html', source: 'NASA'},
+  {title: 'Quantum entanglement in macroscopic systems', summary: 'Researchers have demonstrated entanglement between two mechanical oscillators, pushing the boundaries of quantum mechanics.', link: 'https://arxiv.org/abs/1805.10714', source: 'arXiv'},
+  {title: 'Black hole mergers and gravitational waves', summary: 'LIGO and Virgo collaborations report new detections of binary black hole mergers with unprecedented precision.', link: 'https://arxiv.org/abs/1908.06060', source: 'arXiv (LIGO/Virgo)'},
+  {title: 'Superconductivity in twisted bilayer graphene', summary: 'A new study reveals the complex phase diagram of moiré materials, showing tunable superconducting states.', link: 'https://arxiv.org/abs/1803.05437', source: 'arXiv'},
+  {title: 'Topological insulators and quantum computing', summary: 'Discovery of new topological phases could lead to more stable qubits for future quantum computers.', link: 'https://arxiv.org/abs/1802.06132', source: 'arXiv'},
+  {title: 'Dark matter search with liquid xenon detectors', summary: 'The latest results from the LUX-ZEPLIN experiment set new limits on WIMP-nucleon cross sections.', link: 'https://arxiv.org/abs/2207.03764', source: 'arXiv (LZ Collaboration)'},
+  {title: 'Neural networks for fluid dynamics', summary: 'Machine learning models are now capable of simulating complex turbulent flows with high fidelity.', link: 'https://arxiv.org/abs/1808.08930', source: 'arXiv'},
+  {title: 'Quantum thermodynamics of small systems', summary: 'Experimental verification of fluctuation theorems in single-molecule junctions.', link: 'https://arxiv.org/abs/1805.08226', source: 'arXiv'},
+  {title: 'High-energy neutrino astronomy', summary: 'IceCube observatory identifies a new source of extragalactic neutrinos associated with a blazar.', link: 'https://arxiv.org/abs/1807.08794', source: 'arXiv (IceCube)'},
+  {title: 'Photonics in 2D materials', summary: 'Integration of transition metal dichalcogenides with silicon photonics for ultra-fast communication.', link: 'https://arxiv.org/abs/1809.01101', source: 'arXiv'},
+  {title: 'Muon g-2 experiment results', summary: 'New measurements of the muon magnetic moment continue to show tension with the Standard Model.', link: 'https://arxiv.org/abs/2104.03281', source: 'arXiv (Muon g-2)'},
+  {title: 'JWST reveals early galaxy formation', summary: 'The James Webb Space Telescope has identified galaxies that formed just 300 million years after the Big Bang.', link: 'https://www.nasa.gov/missions/webb/', source: 'NASA'},
   {title: 'CRISPR gene editing for rare diseases', summary: 'New clinical trials show promising results for treating sickle cell anemia using CRISPR-Cas9 technology.', link: 'https://www.nature.com/articles/d41586-023-03303-z', source: 'Nature'},
-  {title: 'Fusion energy breakthrough at NIF', summary: 'Scientists achieve net energy gain in a fusion reaction for the second time, improving efficiency.', link: 'https://www.scientificamerican.com/article/nuclear-fusion-breakthrough-what-does-it-mean/', source: 'Scientific American'},
-  {title: 'AI models surpassing human benchmarks', summary: 'Large language models are now outperforming humans in complex reasoning and creative writing tasks.', link: 'https://technologyreview.com', source: 'MIT Tech Review'},
+  {title: 'Fusion energy breakthrough at NIF', summary: 'Scientists achieve net energy gain in a fusion reaction for the second time, improving efficiency.', link: 'https://www.nature.com/articles/d41586-022-04440-7', source: 'Nature'},
+  {title: 'AI models for protein folding', summary: 'DeepMind\'s AlphaFold has predicted the structures of nearly all known proteins, transforming biology.', link: 'https://www.nature.com/articles/d41586-020-03348-4', source: 'Nature'},
   {title: 'Microplastics found in human blood', summary: 'A groundbreaking study detects microplastic particles in the human bloodstream for the first time.', link: 'https://www.theguardian.com/environment/2022/mar/24/microplastics-found-in-human-blood-for-first-time', source: 'The Guardian Science'}
 ];
 
@@ -86,7 +86,7 @@ interface ResearchBoardProps {
   onChatWithAI?: (message: string) => void;
 }
 
-export const ResearchBoard: React.FC<ResearchBoardProps> = ({ onChatWithAI }) => {
+export const ResearchBoard = React.memo(({ onChatWithAI }: ResearchBoardProps) => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -170,12 +170,18 @@ export const ResearchBoard: React.FC<ResearchBoardProps> = ({ onChatWithAI }) =>
             - Argomenti vari: Fisica, AI, Spazio, Biologia, Medicina.
             Restituisci un array JSON di oggetti con: id, title, summary, source, link, published.`;
             
-            const genAIResponse = await genAI.models.generateContent({
+            if (!API_KEY) {
+        console.warn("Gemini API Key missing in ResearchBoard");
+        return [];
+      }
+      const genAIResponse = await genAI.models.generateContent({
               model,
               contents: prompt,
               config: { responseMimeType: "application/json" }
             });
-            const results = JSON.parse(genAIResponse.text);
+            const text = genAIResponse.text || '';
+            const cleanText = text.replace(/```json\n?|```/g, '').trim();
+            const results = JSON.parse(cleanText);
             const items = Array.isArray(results) ? results : (results.articles || results.results || []);
             return items
               .filter((a: any) => a.title && a.summary && a.link)
@@ -276,6 +282,11 @@ export const ResearchBoard: React.FC<ResearchBoardProps> = ({ onChatWithAI }) =>
       Traduci titoli e riassunti in italiano.
       Restituisci un array JSON di oggetti con: id, title, summary, source, link, published.`;
 
+      if (!API_KEY) {
+        setError("Configurazione API mancante.");
+        setIsSearching(false);
+        return;
+      }
       let genAIResponse;
       try {
         genAIResponse = await genAI.models.generateContent({
@@ -297,7 +308,9 @@ export const ResearchBoard: React.FC<ResearchBoardProps> = ({ onChatWithAI }) =>
         });
       }
 
-      const results = JSON.parse(genAIResponse.text);
+      const text = genAIResponse.text || '';
+      const cleanText = text.replace(/```json\n?|```/g, '').trim();
+      const results = JSON.parse(cleanText);
       const searchResults = (Array.isArray(results) ? results : (results.articles || results.results || []))
         .filter((a: any) => a.title && a.summary && a.link && a.link !== '#')
         .map((a: any, i: number) => ({
@@ -586,4 +599,4 @@ export const ResearchBoard: React.FC<ResearchBoardProps> = ({ onChatWithAI }) =>
       </AnimatePresence>
     </div>
   );
-};
+});

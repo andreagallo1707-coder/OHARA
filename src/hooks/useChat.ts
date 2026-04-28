@@ -24,6 +24,8 @@ export function useChat() {
     content: string,
     history: { role: 'user' | 'model'; parts: any[] }[],
     fileData?: FileData,
+    userMemory: string[] = [],
+    citationStyle: string = 'APA',
     onChunk?: (text: string, citations: any[], done: boolean) => void
   ) => {
     cancelRequest();
@@ -33,15 +35,15 @@ export function useChat() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    // 60s Timeout
+    // 180s Timeout for file/video processing
     timeoutRef.current = setTimeout(() => {
       controller.abort();
-      setError("Timeout della richiesta. Riprova?");
+      setError("Timeout della richiesta. Il file potrebbe essere troppo grande o la connessione lenta. Riprova?");
       setIsLoading(false);
-    }, 60000);
+    }, 180000);
 
     try {
-      const stream = askOharaStream(content, history, fileData);
+      const stream = askOharaStream(content, history, fileData, userMemory, citationStyle);
       
       for await (const chunk of stream) {
         if (controller.signal.aborted) break;
@@ -53,7 +55,7 @@ export function useChat() {
             controller.abort();
             setError("Connessione interrotta. Riprova?");
             setIsLoading(false);
-          }, 15000); // Shorter timeout between chunks
+          }, 60000); // Longer timeout (60s) to allow for video/file processing
         }
 
         if (onChunk) {

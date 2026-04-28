@@ -71,11 +71,50 @@
 }
 
 .markdown-body code {
-  @apply bg-zinc-800 px-1.5 py-0.5 rounded text-sm font-mono text-ohara-red-vivid;
+  @apply bg-zinc-800 px-1.5 py-0.5 rounded text-sm font-mono text-zinc-200;
 }
 
 .markdown-body pre {
   @apply bg-zinc-900 p-4 rounded-lg overflow-x-auto border border-ohara-border my-4;
+}
+
+/* Custom styles for visualizations */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+.recharts-text {
+  fill: #9ca3af !important;
+  font-size: 12px;
+}
+
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Hide Mermaid syntax error bomb and related errors */
+#mermaid-error-id, 
+.mermaid-error, 
+.mermaid-error-id,
+[id^="mermaid-error"] {
+  display: none !important;
+}
+
+html, body {
+  overflow: hidden !important;
+  height: 100% !important;
+  width: 100% !important;
+  position: fixed; /* Prevent mobile bounce/scroll */
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 .markdown-body ul, .markdown-body ol {
@@ -86,6 +125,42 @@
   @apply text-ohara-red-vivid font-bold hover:underline decoration-2 underline-offset-2;
 }
 
+.markdown-body table {
+  @apply w-full border-collapse my-6 text-sm overflow-hidden rounded-xl border border-white/10;
+}
+
+.markdown-body th {
+  @apply bg-zinc-900/80 p-3 text-left font-bold text-zinc-400 uppercase tracking-wider border-b border-white/10;
+}
+
+.markdown-body td {
+  @apply p-3 border-b border-white/5 text-zinc-300;
+}
+
+.markdown-body tr:last-child td {
+  @apply border-b-0;
+}
+
+.markdown-body tr:hover td {
+  @apply bg-white/5 transition-colors;
+}
+
 .katex-display {
   @apply my-4 overflow-x-auto overflow-y-hidden py-2;
+}
+
+/* Error state stabilization */
+.error-boundary-fallback {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Prevent layout shifts in chat */
+.mermaid, .recharts-responsive-container {
+  min-height: 100px;
+  transition: height 0.3s ease;
 }
